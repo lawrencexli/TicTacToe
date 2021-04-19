@@ -1,12 +1,15 @@
 import itertools
 from enum import Enum
 
+"""
+GameBoard is a visual representation of the tic tac toe game session 
+Code from https://github.com/shayakbanerjee/ultimate-ttt-rl/blob/master/board.py
+"""
 
 class GridStates(Enum):
     EMPTY = ' '
     PLAYER_X = 'X'
     PLAYER_O = 'O'
-
 
 class GameStates(Enum):
     ACTIVE = 0
@@ -14,8 +17,7 @@ class GameStates(Enum):
     X_WON = 2
     O_WON = 3
 
-
-class TTTBoard:
+class GameBoard:
     def __init__(self):
         self.board = self.emptyState()
         self.decision = GameStates.ACTIVE
@@ -31,7 +33,10 @@ class TTTBoard:
             return (len(set(listOfThree)) == 1) and (GridStates.EMPTY not in listOfThree)
 
         def getWinState(listOfThree):
-            return TTTBoardDecision.WON_O if GridStates.PLAYER_O in listOfThree else TTTBoardDecision.WON_X
+            if GridStates.PLAYER_O in listOfThree:
+                return GameStates.O_WON
+            else:
+                return GameStates.X_WON
 
         for row in self.board:  # Check rows first
             if winCheck(row):  # The row was won
@@ -46,12 +51,15 @@ class TTTBoard:
 
         diagonal1 = [self.board[i][j] for (i, j) in zip(range(3), range(3))]
         diagonal2 = [self.board[i][j] for (i, j) in zip(range(3), range(2, -1, -1))]
+
         if winCheck(diagonal1):
             self.decision = getWinState(diagonal1)
             return
+
         if winCheck(diagonal2):
             self.decision = getWinState(diagonal2)
             return
+
         if filter(lambda x: GridStates.EMPTY in x, self.board):  # Board is full
             self.decision = GameStates.ACTIVE
         else:
@@ -62,13 +70,13 @@ class TTTBoard:
             print('That location is not empty')
             return
         self.board[i][j] = who
-        # self.printBoard()
+        self.printBoard()
         self.determineBoardState()
         if self.decision == GameStates.DRAW and verbose is True:
             print('This TTT game was drawn!')
         elif self.decision != GameStates.ACTIVE and verbose is True:
             print('This TTT game was won by %s' % (
-                GridStates.PLAYER_X if self.decision == GameStates.WON_X else GridStates.PLAYER_O))
+                GridStates.PLAYER_X if self.decision == GameStates.X_WON else GridStates.PLAYER_O))
 
     def printBoard(self):
         delimiter = "-------------"
@@ -107,9 +115,8 @@ class TTTBoard:
 
 
 if __name__ == '__main__':
-    b = TTTBoard()
+    b = GameBoard()
     b.makeMove(GridStates.PLAYER_X, 1, 1)
-
     b.makeMove(GridStates.PLAYER_O, 0, 0)
     b.makeMove(GridStates.PLAYER_X, 1, 2)
     b.makeMove(GridStates.PLAYER_O, 1, 0)
@@ -118,3 +125,12 @@ if __name__ == '__main__':
     b.makeMove(GridStates.PLAYER_X, 0, 1)
     b.makeMove(GridStates.PLAYER_O, 2, 1)
     b.makeMove(GridStates.PLAYER_X, 2, 2)
+
+    b1 = GameBoard()
+    b1.makeMove(GridStates.PLAYER_X, 1, 1)
+    b1.makeMove(GridStates.PLAYER_O, 1, 0)
+    b1.makeMove(GridStates.PLAYER_X, 2, 2)
+    b1.makeMove(GridStates.PLAYER_O, 0, 0)
+    b1.makeMove(GridStates.PLAYER_X, 2, 0)
+    b1.makeMove(GridStates.PLAYER_O, 0, 2)
+    b1.makeMove(GridStates.PLAYER_X, 2, 1)
