@@ -1,136 +1,119 @@
-import itertools
-from enum import Enum
+from random import randint
 
-"""
-GameBoard is a visual representation of the tic tac toe game session 
-Code from https://github.com/shayakbanerjee/ultimate-ttt-rl/blob/master/board.py
-"""
-
-class GridStates(Enum):
-    EMPTY = ' '
-    PLAYER_X = 'X'
-    PLAYER_O = 'O'
-
-class GameStates(Enum):
-    ACTIVE = 0
-    DRAW = 1
-    X_WON = 2
-    O_WON = 3
 
 class GameBoard:
+    valid_play = [11, 12, 13, 21, 22, 23, 31, 32, 33]
+
+    """
+    Initialize the game
+    State of the game: 'X' if Player_X won, 'O' if Player_O won, '+' if draw, '.' if still ongoing
+    """
     def __init__(self):
-        self.board = self.emptyState()
-        self.decision = GameStates.ACTIVE
+        self.play = [0] * 9
+        self.winner = '.'
+        self.state = ['.'] * 9
+        self.verbose = False
 
-    @staticmethod
-    def emptyState():
-        return [[GridStates.EMPTY, GridStates.EMPTY, GridStates.EMPTY],
-                [GridStates.EMPTY, GridStates.EMPTY, GridStates.EMPTY],
-                [GridStates.EMPTY, GridStates.EMPTY, GridStates.EMPTY]]
+    def play2state(self):
+        # rewrite self.state after a play
+        current = -1
+        poss = ['.', 'O', 'X']
+        for i in self.play:
+            if i != 0:
+                j = (i // 10 - 1) * 3 + (i % 10) - 1
+                self.state[j] = poss[current]
+            current = current * (-1)
 
-    def determineBoardState(self):
-        def winCheck(listOfThree):
-            return (len(set(listOfThree)) == 1) and (GridStates.EMPTY not in listOfThree)
-
-        def getWinState(listOfThree):
-            if GridStates.PLAYER_O in listOfThree:
-                return GameStates.O_WON
-            else:
-                return GameStates.X_WON
-
-        for row in self.board:  # Check rows first
-            if winCheck(row):  # The row was won
-                self.decision = getWinState(row)
-                return
-
-        for j in range(3):  # Check columns next
-            column = [self.board[0][j], self.board[1][j], self.board[2][j]]
-            if winCheck(column):
-                self.decision = getWinState(column)
-                return
-
-        diagonal1 = [self.board[i][j] for (i, j) in zip(range(3), range(3))]
-        diagonal2 = [self.board[i][j] for (i, j) in zip(range(3), range(2, -1, -1))]
-
-        if winCheck(diagonal1):
-            self.decision = getWinState(diagonal1)
-            return
-
-        if winCheck(diagonal2):
-            self.decision = getWinState(diagonal2)
-            return
-
-        if filter(lambda x: GridStates.EMPTY in x, self.board):  # Board is full
-            self.decision = GameStates.ACTIVE
+    def newPlay(self, coord):
+        # Add new play (if valid) and update other variables
+        if self.winner != '.':
+            print("Error: Game already finished")
+        elif (not coord in self.valid_play):
+            print("Error: shot off board")
+        elif (coord in self.play):
+            print("Error: move already played.")
         else:
-            self.decision = GameStates.DRAW
+            self.play[self.play.index(0)] = coord
+            self.play2state()
+            if self.verbose:
+                self.display()
+            self.status()
 
-    def makeMove(self, who, i, j, verbose=True):  # who is PLAYER_X or PLAYER_O
-        if self.board[i][j] != GridStates.EMPTY:
-            print('That location is not empty')
-            return
-        self.board[i][j] = who
-        self.printBoard()
-        self.determineBoardState()
-        if self.decision == GameStates.DRAW and verbose is True:
-            print('This TTT game was drawn!')
-        elif self.decision != GameStates.ACTIVE and verbose is True:
-            print('This TTT game was won by %s' % (
-                GridStates.PLAYER_X if self.decision == GameStates.X_WON else GridStates.PLAYER_O))
+    def available(self):
+        # Return list of available move to pick from
+        t = self.valid_play.copy()
+        for i in self.play:
+            if i != 0:
+                t.remove(i)
+        return t
 
-    def printBoard(self):
-        delimiter = "-------------"
-        BOARD_FORMAT = "%s\n%s\n%s\n%s\n%s\n%s\n%s" % (delimiter, self.getBoardRowString(0),
-                                                       delimiter, self.getBoardRowString(1),
-                                                       delimiter, self.getBoardRowString(2), delimiter)
-        cells = []
-        for (i, j) in itertools.product(range(3), range(3)):
-            cells.append(self.board[i][j])
-        print(BOARD_FORMAT.format(*cells))
+    def print(self):
+        # Debugging function
+        print("Play : {}.\nState : {}.\nWinner = {}.".format(self.play, self.state, self.winner))
 
-    def getBoardRowString(self, row):
-        return "| {0} | {1} | {2} |".format(*self.board[row])
+    def display(self):
+        # Print the board state
+        print("")
+        for i in range(9):
+            print(self.state[i], end='')
+            if (i + 1) % 3 == 0:
+                print('\n', end='')
+            else:
+                print(' ', end='')
+        print("")
 
-    def getGrid(self, i, j):
-        return self.board[i][j]
-
-    def getEmptyBoardPlaces(self):
-        emptyPlaces = []
-        for (i, j) in itertools.product(range(3), range(3)):
-            if self.board[i][j] == GridStates.EMPTY:
-                emptyPlaces.append((i, j))
-        return emptyPlaces
-
-    def getBoardState(self):
-        return ''.join([''.join(row) for row in self.board])
-
-    def getDoesBoardHaveEmptyCell(self):
-        for (i, j) in itertools.product(range(3), range(3)):
-            if self.board[i][j] == GridStates.EMPTY:
-                return True
-        return False
-
-    def getBoardDecision(self):
-        return self.decision
+    def status(self):
+        # Check the board, if there is a winner
+        if ((self.state[0] == self.state[4] == self.state[8]) or (
+                self.state[2] == self.state[4] == self.state[6])) and (self.state[4] != '.'):
+            self.winner = self.state[4]
+        else:
+            for i in range(3):
+                if (self.state[i] == self.state[i + 3] == self.state[i + 6]) and (self.state[i] != '.'):
+                    self.winner = self.state[i]
+                elif (self.state[3 * i] == self.state[3 * i + 1] == self.state[3 * i + 2]) and (
+                        self.state[3 * i] != '.'):
+                    self.winner = self.state[3 * i]
+        if self.winner != '.':
+            if self.verbose:
+                print("The winner is", self.winner, '!')
+        elif (self.winner == '.') and (len(self.available()) == 0):
+            self.winner = '+'
+            if self.verbose:
+                print("Match draw!")
 
 
-if __name__ == '__main__':
-    b = GameBoard()
-    b.makeMove(GridStates.PLAYER_X, 1, 1)
-    b.makeMove(GridStates.PLAYER_O, 0, 0)
-    b.makeMove(GridStates.PLAYER_X, 1, 2)
-    b.makeMove(GridStates.PLAYER_O, 1, 0)
-    b.makeMove(GridStates.PLAYER_X, 2, 0)
-    b.makeMove(GridStates.PLAYER_O, 0, 2)
-    b.makeMove(GridStates.PLAYER_X, 0, 1)
-    b.makeMove(GridStates.PLAYER_O, 2, 1)
-    b.makeMove(GridStates.PLAYER_X, 2, 2)
+def randomIA(B):
+    # Make a random move on a Board B
+    if B.winner != '.':
+        return None
+    poss = B.available()
+    L = len(poss) - 1
+    new = poss[randint(0, L)]
+    B.newPlay(new)
 
-    b1 = GameBoard()
-    b1.makeMove(GridStates.PLAYER_X, 1, 1)
-    b1.makeMove(GridStates.PLAYER_O, 1, 0)
-    b1.makeMove(GridStates.PLAYER_X, 2, 2)
-    b1.makeMove(GridStates.PLAYER_O, 0, 0)
-    b1.makeMove(GridStates.PLAYER_X, 2, 0)
-    b1.makeMove(GridStates.PLAYER_O, 0, 2)
-    b1.makeMove(GridStates.PLAYER_X, 2, 1)
+
+def autoGame(B):
+    # Playing random moves to get a valid board
+    while B.winner == '.':
+        randomIA(B)
+
+
+def simulation(nsim=10):
+    # Simulating games and exporting their results (plays, winner)
+    # With outputs encoded for a LSTM neural network
+    dataset = []
+    win = []
+    for i in range(nsim):
+        B = GameBoard()
+        autoGame(B)
+        dataset.append([[x] for x in B.play])
+        foo = [0] * 3
+        if B.winner == 'X':
+            foo[0] = 1
+        elif B.winner == 'O':
+            foo[2] = 1
+        elif B.winner == '+':
+            foo[1] = 1
+        win.append(foo)
+    return dataset, win
