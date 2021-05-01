@@ -1,3 +1,4 @@
+import numpy as np
 from random import randint
 
 
@@ -117,3 +118,8 @@ def simulation(nsim=10):
             foo[1] = 1
         win.append(foo)
     return dataset, win
+
+if __name__ == "__main__":
+    a, b = simulation(5)  # Simulate 5 games
+    print(np.squeeze(a))  # List of plays
+    print(b)  # List of end-game status
