@@ -2,8 +2,9 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
-from keras.layers import Activation
+from keras.layers import BatchNormalization
 import matplotlib.pyplot as plt
+
 
 class NeuralAgent:
 
@@ -12,9 +13,10 @@ class NeuralAgent:
 
     def create_model(self):
         self.model = Sequential()
-        self.model.add(LSTM(8, input_shape=(5, 1), return_sequences=False))
+        self.model.add(LSTM(16, input_shape=(5, 1), return_sequences=False))
         self.model.add(Dense(2, kernel_initializer='normal', activation ='linear'))
         self.model.add(Dense(1, kernel_initializer='normal', activation ='linear'))
+        self.model.summary()
 
     def train(self, inputs, outputs):
         self.model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
@@ -24,7 +26,6 @@ class NeuralAgent:
 
     def plot(self, inputs, outputs):
         predict = self.model.predict(inputs)
-        print(predict)
         plt.plot(outputs, predict - outputs, 'C2')
         plt.ylim(ymax=3, ymin=-3)
         plt.show()
