@@ -1,125 +1,174 @@
+################################################################################
+# tictactoe.py - the first of many programs
+# uses numpy arrays to represent an internal tictactoe board
+
+# uses four global variables - board_arr, tutorial_arr, user_num, and comp_num
+
 import numpy as np
-from random import randint
+import random
 
 
-class GameBoard:
-    valid_play = [11, 12, 13, 21, 22, 23, 31, 32, 33]
+# Creates blank 3x3 array. Randomizes who goes first.
+def initialize():
+    global board_arr
+    global tutorial_arr
 
-    """
-    Initialize the game
-    State of the game: 'X' if Player_X won, 'O' if Player_O won, '+' if draw, '.' if still ongoing
-    """
-    def __init__(self):
-        self.play = [0] * 9
-        self.winner = '.'
-        self.state = ['.'] * 9
-        self.verbose = False
+    # 0's act as O's
+    # 1's act as X's
+    # 3's act as placeholders for blank spots
+    board_arr = np.array([[3, 3, 3],
+                          [3, 3, 3],
+                          [3, 3, 3]])
+    tutorial_arr = np.array([[1, 2, 3],
+                             [4, 5, 6],
+                             [7, 8, 9]])
 
-    def play2state(self):
-        # rewrite self.state after a play
-        current = -1
-        poss = ['.', 'O', 'X']
-        for i in self.play:
-            if i != 0:
-                j = (i // 10 - 1) * 3 + (i % 10) - 1
-                self.state[j] = poss[current]
-            current = current * (-1)
+    global user_num
+    global comp_num
 
-    def newPlay(self, coord):
-        # Add new play (if valid) and update other variables
-        if self.winner != '.':
-            print("Error: Game already finished")
-        elif (not coord in self.valid_play):
-            print("Error: shot off board")
-        elif (coord in self.play):
-            print("Error: move already played.")
+    # Flip a coin to see who goes first with X's
+    coin_flip = np.random.randint(0, 2)
+    if coin_flip == 0:
+        user_num = 0
+        comp_num = 1
+        print("Computer goes first. Your letter is O.")
+        comp_turn()
+
+    elif coin_flip == 1:
+        user_num = 1
+        comp_num = 0
+        print("You go first. Your letter is X.")
+        user_turn()
+
+
+# Converts internal numpy array into a visual ASCII board.
+def display_board():
+    board_list = []
+
+    # loops through flattened board array to scan for 0's, 1's and 3's
+    # converts them into O's, X's, and blank spots
+    internal_arr = board_arr.flatten()
+    for i in range(0, 9):
+        if internal_arr[i] == 0:
+            board_list.append('O')
+        elif internal_arr[i] == 1:
+            board_list.append('X')
+        elif internal_arr[i] == 3:
+            board_list.append(' ')
         else:
-            self.play[self.play.index(0)] = coord
-            self.play2state()
-            if self.verbose:
-                self.display()
-            self.status()
+            raise Exception("display_board Error")
 
-    def available(self):
-        # Return list of available move to pick from
-        t = self.valid_play.copy()
-        for i in self.play:
-            if i != 0:
-                t.remove(i)
-        return t
+    # inputs O's, X's, and blank spots into an ASCII tictactoe board
+    print("""
+ {} | {} | {}
+---+---+---
+ {} | {} | {}
+---+---+---
+ {} | {} | {}
+""".format(*board_list))
 
-    def print(self):
-        # Debugging function
-        print("Play : {}.\nState : {}.\nWinner = {}.".format(self.play, self.state, self.winner))
-
-    def display(self):
-        # Print the board state
-        print("")
-        for i in range(9):
-            print(self.state[i], end='')
-            if (i + 1) % 3 == 0:
-                print('\n', end='')
-            else:
-                print(' ', end='')
-        print("")
-
-    def status(self):
-        # Check the board, if there is a winner
-        if ((self.state[0] == self.state[4] == self.state[8]) or (
-                self.state[2] == self.state[4] == self.state[6])) and (self.state[4] != '.'):
-            self.winner = self.state[4]
-        else:
-            for i in range(3):
-                if (self.state[i] == self.state[i + 3] == self.state[i + 6]) and (self.state[i] != '.'):
-                    self.winner = self.state[i]
-                elif (self.state[3 * i] == self.state[3 * i + 1] == self.state[3 * i + 2]) and (
-                        self.state[3 * i] != '.'):
-                    self.winner = self.state[3 * i]
-        if self.winner != '.':
-            if self.verbose:
-                print("The winner is", self.winner, '!')
-        elif (self.winner == '.') and (len(self.available()) == 0):
-            self.winner = '+'
-            if self.verbose:
-                print("Match draw!")
+    print("Numpy array representation: ")
+    print(board_arr)
 
 
-def randomIA(B):
-    # Make a random move on a Board B
-    if B.winner != '.':
-        return None
-    poss = B.available()
-    L = len(poss) - 1
-    new = poss[randint(0, L)]
-    B.newPlay(new)
+def return_open_slots():
+    # Checks for open slots using Boolean arrays.
+    # Important when checking for winner (if draw) and checking if user's input...
+    # ...is valid
+    open_slots = []
+
+    bool_arr = (board_arr == 3)
+    flat_bool_arr = bool_arr.flatten()
+
+    # is spot taken by 3's? If so, then spot is open.
+    # appends (i + 1) because inputs are indexed to 1
+    for i in range(0, len(flat_bool_arr)):
+        if flat_bool_arr[i] == True:
+            open_slots.append(i + 1)
+
+    return open_slots
 
 
-def autoGame(B):
-    # Playing random moves to get a valid board
-    while B.winner == '.':
-        randomIA(B)
+def terminate(last_played_num):
+    # if last played number is user's number, declares user to be winner
+    # if last played number is comp's number, declares comp to be winner
+    # if return_open_slots() came up blank, declares draw
+    if last_played_num == user_num:
+        print("You win!")
+    elif last_played_num == comp_num:
+        print("You lost!")
+    elif last_played_num == "Draw!":
+        print("Draw!")
+
+    input("Play again? \nPress Enter to play again.")
+    initialize()
 
 
-def simulation(nsim=10):
-    # Simulating games and exporting their results (plays, winner)
-    # With outputs encoded for a LSTM neural network
-    dataset = []
-    win = []
-    for i in range(nsim):
-        B = GameBoard()
-        autoGame(B)
-        dataset.append([[x] for x in B.play])
-        foo = [0] * 3
-        if B.winner == 'X':
-            foo[0] = 1
-        elif B.winner == 'O':
-            foo[2] = 1
-        elif B.winner == '+':
-            foo[1] = 1
-        win.append(foo)
-    return dataset, win
+def check_for_winner(last_played_num):
+    # Scans rows, columns, and diagonals for last-played number
+    # Ex. if 1 was the last number played, this function would scan for 1's
+    # Declares draw is open_slots is blank
+    # Else proceeds to next turn
 
-if __name__ == "__main__":
-    a, b = simulation(5)  # Simulate 5 games
-    print(np.squeeze(a))  # List of plays
-    print(b)  # List of end-game status
+    if return_open_slots == []:
+        # Checks if no open slots
+        terminate("Draw!")
+
+    for i in range(0, 3):
+        # Checks rows and columns for match
+        rows_win = (board_arr[i, :] == last_played_num).all()
+        cols_win = (board_arr[:, i] == last_played_num).all()
+
+        if rows_win or cols_win:
+            terminate(last_played_num)
+
+    diag1_win = (np.diag(board_arr) == last_played_num).all()
+    diag2_win = (np.diag(np.fliplr(board_arr)) == last_played_num).all()
+
+    if diag1_win or diag2_win:
+        # Checks both diagonals for match
+        terminate(last_played_num)
+
+    next_turn(last_played_num)
+
+
+def next_turn(last_played_num):
+    if last_played_num == user_num:
+        comp_turn()
+    elif last_played_num == comp_num:
+        user_turn()
+
+
+def place_letter(current_num, current_input):
+    # Takes comp_num and comp_choice (or user_num and user_choice)...
+    # ...and inputs that into the global board_arr
+    # Current_input is either randomly chosen by computer or input by user
+    # Current_num is either user_num or comp_num
+    index = np.where(tutorial_arr == current_input)
+    board_arr[index] = current_num
+
+
+def user_turn():
+    display_board()
+
+    user_input = input("Pick an open slot: ")
+    user_input = int(user_input)
+
+    if user_input in return_open_slots():
+        place_letter(user_num, user_input)
+    else:
+        print("That's not a open slots.")
+        user_turn()
+
+    check_for_winner(user_num)
+
+
+def comp_turn():
+    # Randomly chooses from open_slots to place its letter
+    open_slots = return_open_slots()
+    comp_input = random.choice(open_slots)
+    place_letter(comp_num, comp_input)
+    check_for_winner(comp_num)
+
+
+initialize()
