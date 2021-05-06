@@ -15,6 +15,7 @@ class GameBoard:
         self.comp_num = None
         self.record_choice_arr = None
         self.record_board_arr = None
+        self.agent = NeuralAgent()
         print("Welcome to the game of tic tac toe!")
 
     # Creates blank 3x3 array. Randomizes who goes first.
@@ -30,6 +31,7 @@ class GameBoard:
                                       [7, 8, 9]])
         self.record_board_arr = []
         self.record_choice_arr = []
+        self.agent.load_model()
 
         # Flip a coin to see who goes first with X's
         coin_flip = np.random.randint(0, 2)
@@ -92,6 +94,8 @@ class GameBoard:
         # if last played number is user's number, declares user to be winner
         # if last played number is comp's number, declares comp to be winner
         # if return_open_slots() came up blank, declares draw
+        self.display_board()
+
         if last_played_num == self.user_num:
             print("You win!")
         elif last_played_num == self.comp_num:
@@ -102,24 +106,23 @@ class GameBoard:
         self.evaluate()
 
     def evaluate(self):
-        if input("Print the numpy array? (y/n)") == 'y':
-            print("Board history: ")
-            print(self.record_board_arr)
-
-            print("User choice history: ")
-            print(self.record_choice_arr)
+        # if input("Print the numpy array? (y/n)") == 'y':
+        #     print("Board history: ")
+        #     print(self.record_board_arr)
+        #
+        #     print("User choice history: ")
+        #     print(self.record_choice_arr)
 
         if input("Train the neural agent? (y/n)") == 'y':
-            agent = NeuralAgent()
-            agent.load_model()
-
             X = np.array(self.record_board_arr)
+            print("The length:",len(self.record_choice_arr))
+            X = X.reshape((len(self.record_choice_arr), 3, 3))
             y = np.array(self.record_choice_arr)
-            agent.train(X, y)
-            agent.plot(X, y)
+            y = y.reshape((len(self.record_choice_arr), 3, 3))
+            self.agent.train(X, y)
 
             if input("Save model? (y/n)") == 'y':
-                agent.save_model()
+                self.agent.save_model()
 
         if input("Do you want to play again? (y/n)") == 'y':
             self.new_game()
@@ -133,7 +136,7 @@ class GameBoard:
         # Declares draw is open_slots is blank
         # Else proceeds to next turn
 
-        if not self.return_open_slots:
+        if not self.return_open_slots():
             # Checks if no open slots
             self.terminate("Draw!")
 
@@ -171,11 +174,19 @@ class GameBoard:
     def user_turn(self):
         self.display_board()
 
+        prediction = self.board_arr.reshape((1, 3, 3))
+        print("Prediction: ")
+        print(self.agent.predict(prediction))
+
         user_input = input("Pick an open slot: ")
         user_input = int(user_input)
 
         if user_input in self.return_open_slots():
-            self.record_choice_arr += [user_input]
+            arr = [0 for _ in range(9)]
+            arr[user_input - 1] = 1
+            arr = np.reshape(arr, (-1, 3))
+
+            self.record_choice_arr += [arr.tolist()]
             self.place_letter(self.user_num, user_input)
             self.record_board_arr += [self.board_arr.tolist()]
         else:

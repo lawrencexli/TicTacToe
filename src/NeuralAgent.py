@@ -1,8 +1,7 @@
-import matplotlib.pyplot as plt
-import numpy as np
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.models import Sequential
+from tensorflow.python.keras.layers import BatchNormalization
 from tensorflow.python.keras.models import model_from_json
 
 
@@ -29,13 +28,14 @@ class NeuralAgent:
         # Add a bunch of networks
         self.model.add(LSTM(32, input_shape=(3, 3), return_sequences=True))
         self.model.add(LSTM(16, return_sequences=True))
-        self.model.add(LSTM(8, return_sequences=False))
-        self.model.add(Dense(2, kernel_initializer='normal', activation='linear'))
-        self.model.add(Dense(1, kernel_initializer='normal', activation='linear'))
+        self.model.add(BatchNormalization())
+        self.model.add(Dense(3, kernel_initializer='normal', activation='linear'))
         self.model.summary()
 
+        # TODO - Handle neural network invalid result
+
     def train(self, inputs, outputs):
-        self.model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+        self.model.compile(loss='mean_absolute_error', optimizer='adam', metrics=['accuracy'])
         # Actual do training
         self.model.fit(inputs, outputs, epochs=500, batch_size=5, validation_split=0.05, verbose=0)
         scores = self.model.evaluate(inputs, outputs, verbose=1, batch_size=5)
@@ -47,26 +47,13 @@ class NeuralAgent:
             json_file.write(model_json)
         # serialize weights to HDF5
         self.model.save_weights("../model/model.h5")
-        print("Saved model to disk in saved_model folder")
+        print("Saved model to disk in model folder")
 
-    def plot(self, inputs, outputs):
-        predict = self.model.predict(inputs)
-        print(predict)
-        plt.plot(outputs, predict - outputs, 'C2')
-        plt.ylim(ymax=3, ymin=-3)
-        plt.show()
+    def predict(self, inputs):
+        return self.model.predict(inputs)
 
 
 if __name__ == "__main__":
-    X = [[[0, 3, 3], [1, 3, 3], [3, 3, 3]], [[0, 0, 3], [1, 3, 3], [3, 3, 1]], [[0, 0, 0], [1, 3, 1], [3, 3, 1]]]
-    X = np.array(X)
-    print(X.shape)
-
-    y = [1, 2, 3]
-    y = np.array(y)
-    print(y.shape)
-
     myAgent = NeuralAgent()
     myAgent.load_model()
-    myAgent.train(X, y)
-    myAgent.plot(X, y)
+    # myAgent.predict()
