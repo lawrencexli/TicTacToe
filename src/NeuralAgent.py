@@ -29,7 +29,7 @@ class NeuralAgent:
         self.model.add(LSTM(32, input_shape=(3, 3), return_sequences=True))
         self.model.add(LSTM(16, return_sequences=True))
         self.model.add(BatchNormalization())
-        self.model.add(Dense(3, kernel_initializer='normal', activation='linear'))
+        self.model.add(Dense(3, kernel_initializer='normal', activation='sigmoid'))
         self.model.summary()
 
         # TODO - Handle neural network invalid result
