@@ -32,11 +32,12 @@ class GameBoard:
         self.record_board_arr = []
         self.record_choice_arr = []
         self.agent.load_model()
+        self.user_num = 0
+        self.comp_num = 1
 
         # Flip a coin to see who goes first with X's
         coin_flip = np.random.randint(0, 2)
-        self.user_num = 0
-        self.comp_num = 1
+
         if coin_flip == 0:
             print("Computer goes first. Your letter is O.")
             self.comp_turn()
@@ -44,12 +45,11 @@ class GameBoard:
             print("You go first. Your letter is O.")
             self.user_turn()
 
-    # Converts internal numpy array into a visual ASCII board.
+    """
+    Converts internal numpy array into a visual ASCII board.
+    """
     def display_board(self):
         board_list = []
-
-        # loops through flattened board array to scan for 0's, 1's and 3's
-        # converts them into O's, X's, and blank spots
         internal_arr = self.board_arr.flatten()
         for i in range(0, 9):
             if internal_arr[i] == 0:
@@ -59,7 +59,7 @@ class GameBoard:
             elif internal_arr[i] == 3:
                 board_list.append(' ')
             else:
-                raise Exception("display_board Error")
+                raise Exception("Error: Unable to display board")
 
         # inputs O's, X's, and blank spots into an ASCII tic tac toe board
         print("""
@@ -73,29 +73,26 @@ class GameBoard:
         print("Numpy array representation: ")
         print(self.board_arr)
 
+    """
+    Checks for open slots using boolean arrays.
+    """
     def return_open_slots(self):
-        # Checks for open slots using Boolean arrays.
-        # Important when checking for winner (if draw) and checking if user's input...
-        # ...is valid
         open_slots = []
-
         bool_arr = (self.board_arr == 3)
         flat_bool_arr = bool_arr.flatten()
 
-        # is spot taken by 3's? If so, then spot is open.
-        # appends (i + 1) because inputs are indexed to 1
         for i in range(0, len(flat_bool_arr)):
             if flat_bool_arr[i]:
                 open_slots.append(i + 1)
 
         return open_slots
 
+    """
+    Terminate the game and determine the winner or draw
+    Then we will evaluate the board and train the agent
+    """
     def terminate(self, last_played_num):
-        # if last played number is user's number, declares user to be winner
-        # if last played number is comp's number, declares comp to be winner
-        # if return_open_slots() came up blank, declares draw
         self.display_board()
-
         if last_played_num == self.user_num:
             print("You win!")
         elif last_played_num == self.comp_num:
@@ -105,14 +102,10 @@ class GameBoard:
 
         self.evaluate()
 
+    """
+    Evaluate the game and train the neural agent
+    """
     def evaluate(self):
-        # if input("Print the numpy array? (y/n)") == 'y':
-        #     print("Board history: ")
-        #     print(self.record_board_arr)
-        #
-        #     print("User choice history: ")
-        #     print(self.record_choice_arr)
-
         if input("Train the neural agent? (y/n)") == 'y':
             X = np.array(self.record_board_arr)
             print("The length:",len(self.record_choice_arr))
@@ -130,18 +123,15 @@ class GameBoard:
             print("Thank you for playing!")
             sys.exit()
 
+    """
+    Checks rows, columns, and diagonals for winning
+    """
     def check_for_winner(self, last_played_num):
-        # Scans rows, columns, and diagonals for last-played number
-        # Ex. if 1 was the last number played, this function would scan for 1's
-        # Declares draw is open_slots is blank
-        # Else proceeds to next turn
 
         if not self.return_open_slots():
-            # Checks if no open slots
             self.terminate("Draw!")
 
         for i in range(0, 3):
-            # Checks rows and columns for match
             rows_win = (self.board_arr[i, :] == last_played_num).all()
             cols_win = (self.board_arr[:, i] == last_played_num).all()
 
@@ -152,31 +142,32 @@ class GameBoard:
         diag2_win = (np.diag(np.fliplr(self.board_arr)) == last_played_num).all()
 
         if diag1_win or diag2_win:
-            # Checks both diagonals for match
             self.terminate(last_played_num)
 
         self.next_turn(last_played_num)
 
+    """
+    Determine who will play next
+    """
     def next_turn(self, last_played_num):
         if last_played_num == self.user_num:
             self.comp_turn()
         elif last_played_num == self.comp_num:
             self.user_turn()
 
+    """
+    Place the "O" or "X" into the board
+    """
     def place_letter(self, current_num, current_input):
-        # Takes comp_num and comp_choice (or user_num and user_choice)...
-        # ...and inputs that into the global board_arr
-        # Current_input is either randomly chosen by computer or input by user
-        # Current_num is either user_num or comp_num
         index = np.where(self.tutorial_arr == current_input)
         self.board_arr[index] = current_num
 
+    """
+    Predict user turn and user actually makes the turn
+    """
     def user_turn(self):
         self.display_board()
-
-        prediction = self.board_arr.reshape((1, 3, 3))
-        print("Prediction: ")
-        print(self.agent.predict(prediction))
+        self.predict()
 
         user_input = input("Pick an open slot: ")
         user_input = int(user_input)
@@ -194,6 +185,19 @@ class GameBoard:
             self.user_turn()
         self.check_for_winner(self.user_num)
 
+    def predict(self):
+        prediction = self.board_arr.reshape((1, 3, 3))
+        print("Prediction: ")
+        result = self.agent.predict(prediction)
+        result = result.flatten().tolist()
+        for i in range(len(result)):
+            if i+1 not in self.return_open_slots():
+                result[i] = 'N/A'
+        print(np.reshape(result, (-1, 3)))
+
+    """
+    Computer randomly picks an open slots
+    """
     def comp_turn(self):
         # Randomly chooses from open_slots to place its letter
         open_slots = self.return_open_slots()

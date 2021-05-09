@@ -32,8 +32,6 @@ class NeuralAgent:
         self.model.add(Dense(3, kernel_initializer='normal', activation='sigmoid'))
         self.model.summary()
 
-        # TODO - Handle neural network invalid result
-
     def train(self, inputs, outputs):
         self.model.compile(loss='mean_absolute_error', optimizer='adam', metrics=['accuracy'])
         # Actual do training
@@ -52,8 +50,3 @@ class NeuralAgent:
     def predict(self, inputs):
         return self.model.predict(inputs)
 
-
-if __name__ == "__main__":
-    myAgent = NeuralAgent()
-    myAgent.load_model()
-    # myAgent.predict()
