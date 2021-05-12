@@ -33,7 +33,7 @@ class NeuralAgent:
     def train(self, inputs, outputs):
         self.model.compile(loss='mean_absolute_error', optimizer='adam', metrics=['accuracy'])
         # Actual do training
-        self.model.fit(inputs, outputs, epochs=2000, batch_size=5, validation_split=0.05, verbose=0)
+        self.model.fit(inputs, outputs, epochs=500, batch_size=5, validation_split=0.05, verbose=0)
         scores = self.model.evaluate(inputs, outputs, verbose=1, batch_size=5)
         print('Accuracy: {}'.format(scores[1]))
 
