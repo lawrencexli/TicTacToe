@@ -4,7 +4,13 @@ import random
 
 from NeuralAgent import NeuralAgent
 
+"""
+GameBoard is a representation of the tic tac toe game session 
+and the neural network prediction platform
 
+Code from https://github.com/geoffreyyip/numpy-tictactoe/blob/master/tictactoe.py
+Modified and specialized for neural network training 
+"""
 class GameBoard:
 
     def __init__(self):
@@ -18,11 +24,13 @@ class GameBoard:
         self.agent = NeuralAgent()
         print("Welcome to the game of tic tac toe!")
 
-    # Creates blank 3x3 array. Randomizes who goes first.
+    """
+    Creates a blank 3x3 numpy array for game board representation. Randomizes who goes first.
+    """
     def new_game(self):
-        # 0's act as O's
-        # 1's act as X's
-        # 3's act as placeholders for blank spots
+        # 0 act as O
+        # 1 act as X
+        # 3 act as placeholders for blank spots
         self.board_arr = np.array([[3, 3, 3],
                                    [3, 3, 3],
                                    [3, 3, 3]])
@@ -32,16 +40,16 @@ class GameBoard:
         self.record_board_arr = []
         self.record_choice_arr = []
         self.agent.load_model()
-        self.user_num = 0
-        self.comp_num = 1
+        self.user_num = 0  #Make a user number for identification
+        self.comp_num = 1  #Make a computer number for identification
 
-        # Flip a coin to see who goes first with X's
+        # Flip a coin to see whether player or computer goes first
         coin_flip = np.random.randint(0, 2)
 
         if coin_flip == 0:
             print("Computer goes first. Your letter is O.")
             self.comp_turn()
-        elif coin_flip == 1:
+        else:
             print("You go first. Your letter is O.")
             self.user_turn()
 
@@ -108,7 +116,7 @@ class GameBoard:
     def evaluate(self):
         if input("Train the neural agent? (y/n)") == 'y':
             X = np.array(self.record_board_arr)
-            print("The length:",len(self.record_choice_arr))
+            print("The length:", len(self.record_choice_arr))
             X = X.reshape((len(self.record_choice_arr), 3, 3))
             y = np.array(self.record_choice_arr)
             y = y.reshape((len(self.record_choice_arr), 3, 3))
@@ -173,33 +181,43 @@ class GameBoard:
         user_input = int(user_input)
 
         if user_input in self.return_open_slots():
-            arr = [0 for _ in range(9)]
-            arr[user_input - 1] = 1
-            arr = np.reshape(arr, (-1, 3))
-
-            self.record_choice_arr += [arr.tolist()]
-            self.place_letter(self.user_num, user_input)
-            self.record_board_arr += [self.board_arr.tolist()]
+            self.record_user_choice(user_input)
         else:
             print("That's not a open slots.")
             self.user_turn()
         self.check_for_winner(self.user_num)
 
+    """
+    Record user choice to the game board and save the record for future training
+    """
+    def record_user_choice(self, user_input):
+        arr = [0 for _ in range(9)]
+        arr[user_input - 1] = 1
+        arr = np.reshape(arr, (-1, 3))
+        self.record_choice_arr += [arr.tolist()]
+        self.place_letter(self.user_num, user_input)
+        self.record_board_arr += [self.board_arr.tolist()]
+
+    """
+    Neural network predict the next move of human player based on current state
+    """
     def predict(self):
+        floating_format = "{0:.9f}"
         prediction = self.board_arr.reshape((1, 3, 3))
         print("Prediction: ")
         result = self.agent.predict(prediction)
         result = result.flatten().tolist()
         for i in range(len(result)):
-            if i+1 not in self.return_open_slots():
-                result[i] = 'N/A'
+            if i + 1 not in self.return_open_slots():
+                result[i] = 'Closed Slot'
+            else:
+                result[i] = floating_format.format(result[i])
         print(np.reshape(result, (-1, 3)))
 
     """
     Computer randomly picks an open slots
     """
     def comp_turn(self):
-        # Randomly chooses from open_slots to place its letter
         open_slots = self.return_open_slots()
         comp_input = random.choice(open_slots)
         self.place_letter(self.comp_num, comp_input)
