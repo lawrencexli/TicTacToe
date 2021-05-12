@@ -11,6 +11,8 @@ and the neural network prediction platform
 Code from https://github.com/geoffreyyip/numpy-tictactoe/blob/master/tictactoe.py
 Modified and specialized for neural network training 
 """
+
+
 class GameBoard:
 
     def __init__(self):
@@ -27,6 +29,7 @@ class GameBoard:
     """
     Creates a blank 3x3 numpy array for game board representation. Randomizes who goes first.
     """
+
     def new_game(self):
         # 0 act as O
         # 1 act as X
@@ -40,8 +43,8 @@ class GameBoard:
         self.record_board_arr = []
         self.record_choice_arr = []
         self.agent.load_model()
-        self.user_num = 0  #Make a user number for identification
-        self.comp_num = 1  #Make a computer number for identification
+        self.user_num = 0  # Make a user number for identification
+        self.comp_num = 1  # Make a computer number for identification
 
         # Flip a coin to see whether player or computer goes first
         coin_flip = np.random.randint(0, 2)
@@ -56,6 +59,7 @@ class GameBoard:
     """
     Converts internal numpy array into a visual ASCII board.
     """
+
     def display_board(self):
         board_list = []
         internal_arr = self.board_arr.flatten()
@@ -84,6 +88,7 @@ class GameBoard:
     """
     Checks for open slots using boolean arrays.
     """
+
     def return_open_slots(self):
         open_slots = []
         bool_arr = (self.board_arr == 3)
@@ -99,6 +104,7 @@ class GameBoard:
     Terminate the game and determine the winner or draw
     Then we will evaluate the board and train the agent
     """
+
     def terminate(self, last_played_num):
         self.display_board()
         if last_played_num == self.user_num:
@@ -113,14 +119,15 @@ class GameBoard:
     """
     Evaluate the game and train the neural agent
     """
+
     def evaluate(self):
         if input("Train the neural agent? (y/n)") == 'y':
-            X = np.array(self.record_board_arr)
+            board_input = np.array(self.record_board_arr)
             print("The length:", len(self.record_choice_arr))
-            X = X.reshape((len(self.record_choice_arr), 3, 3))
-            y = np.array(self.record_choice_arr)
-            y = y.reshape((len(self.record_choice_arr), 3, 3))
-            self.agent.train(X, y)
+            board_input = board_input.reshape((len(self.record_choice_arr), 3, 3))
+            user_choice_output = np.array(self.record_choice_arr)
+            user_choice_output = user_choice_output.reshape((len(self.record_choice_arr), 3, 3))
+            self.agent.train(board_input, user_choice_output)
 
             if input("Save model? (y/n)") == 'y':
                 self.agent.save_model()
@@ -134,6 +141,7 @@ class GameBoard:
     """
     Checks rows, columns, and diagonals for winning
     """
+
     def check_for_winner(self, last_played_num):
 
         if not self.return_open_slots():
@@ -157,6 +165,7 @@ class GameBoard:
     """
     Determine who will play next
     """
+
     def next_turn(self, last_played_num):
         if last_played_num == self.user_num:
             self.comp_turn()
@@ -166,12 +175,14 @@ class GameBoard:
     """
     Place the "O" or "X" into the board
     """
+
     def place_letter(self, current_num, current_input):
         self.board_arr[np.where(self.tutorial_arr == current_input)] = current_num
 
     """
     Predict user turn and user actually makes the turn
     """
+
     def user_turn(self):
         self.display_board()
         self.predict()
@@ -189,6 +200,7 @@ class GameBoard:
     """
     Record user choice to the game board and save the record for future training
     """
+
     def record_user_choice(self, user_input):
         arr = [0 for _ in range(9)]
         arr[user_input - 1] = 1
@@ -200,6 +212,7 @@ class GameBoard:
     """
     Neural network predict the next move of human player based on current state
     """
+
     def predict(self):
         floating_format = "{0:.9f}"
         prediction = self.board_arr.reshape((1, 3, 3))
@@ -216,6 +229,7 @@ class GameBoard:
     """
     Computer randomly picks an open slots
     """
+
     def comp_turn(self):
         open_slots = self.return_open_slots()
         comp_input = random.choice(open_slots)
