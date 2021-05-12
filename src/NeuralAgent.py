@@ -25,8 +25,9 @@ class NeuralAgent:
 
     def create_model(self):
         self.model = Sequential()
-        self.model.add(LSTM(3, input_shape=(3, 3), return_sequences=False, activation='sigmoid'))
+        self.model.add(LSTM(9, input_shape=(3, 3), return_sequences=True))
         self.model.add(BatchNormalization())
+        self.model.add(Dense(3, kernel_initializer='normal', activation='sigmoid'))
         self.model.summary()
 
     def train(self, inputs, outputs):
