@@ -47,4 +47,3 @@ class NeuralAgent:
 
     def predict(self, inputs):
         return self.model.predict(inputs)
-
