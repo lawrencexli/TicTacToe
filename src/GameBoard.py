@@ -105,7 +105,7 @@ class GameBoard:
             print("You win!")
         elif last_played_num == self.comp_num:
             print("You lost!")
-        elif last_played_num == "Draw!":
+        elif last_played_num == "Draw":
             print("Draw!")
 
         self.evaluate()
@@ -137,7 +137,7 @@ class GameBoard:
     def check_for_winner(self, last_played_num):
 
         if not self.return_open_slots():
-            self.terminate("Draw!")
+            self.terminate("Draw")
 
         for i in range(0, 3):
             rows_win = (self.board_arr[i, :] == last_played_num).all()
@@ -167,8 +167,7 @@ class GameBoard:
     Place the "O" or "X" into the board
     """
     def place_letter(self, current_num, current_input):
-        index = np.where(self.tutorial_arr == current_input)
-        self.board_arr[index] = current_num
+        self.board_arr[np.where(self.tutorial_arr == current_input)] = current_num
 
     """
     Predict user turn and user actually makes the turn
