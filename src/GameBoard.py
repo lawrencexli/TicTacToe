@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 from NeuralAgent import NeuralAgent
 
@@ -8,7 +9,7 @@ from NeuralAgent import NeuralAgent
 GameBoard is a representation of the tic tac toe game session 
 and the neural network prediction platform
 
-Code from https://github.com/geoffreyyip/numpy-tictactoe/blob/master/tictactoe.py
+Code skeleton from https://github.com/geoffreyyip/numpy-tictactoe/blob/master/tictactoe.py
 Modified and specialized for neural network training 
 """
 
