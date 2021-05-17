@@ -32,7 +32,7 @@ class GameBoard:
         print("Welcome to the game of tic tac toe!")
         print("<=================================>")
         print()
-        sleep(1)
+        sleep(2)
 
     """
     Creates a blank 3x3 numpy array for game board representation. Randomizes who goes first.
