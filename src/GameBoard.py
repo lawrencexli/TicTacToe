@@ -1,7 +1,8 @@
-import sys
-import numpy as np
 import random
-import matplotlib.pyplot as plt
+import sys
+from time import sleep
+
+import numpy as np
 
 from NeuralAgent import NeuralAgent
 
@@ -9,8 +10,9 @@ from NeuralAgent import NeuralAgent
 GameBoard is a representation of the tic tac toe game session 
 and the neural network prediction platform
 
-Code skeleton from https://github.com/geoffreyyip/numpy-tictactoe/blob/master/tictactoe.py
-Modified and specialized for neural network training 
+Code specialized from https://github.com/geoffreyyip/numpy-tictactoe/blob/master/tictactoe.py
+Modified and adapted for neural network training and human behavioral prediction
+Rewritten in object oriented format.
 """
 
 
@@ -25,16 +27,21 @@ class GameBoard:
         self.record_choice_arr = None
         self.record_board_arr = None
         self.agent = NeuralAgent()
+        print()
+        print("<=================================>")
         print("Welcome to the game of tic tac toe!")
+        print("<=================================>")
+        print()
+        sleep(1)
 
     """
     Creates a blank 3x3 numpy array for game board representation. Randomizes who goes first.
     """
 
     def new_game(self):
-        # 0 act as O
-        # 1 act as X
-        # 3 act as placeholders for blank spots
+        # 0 act as "O"
+        # 1 act as "X"
+        # 3 act as empty slots
         self.board_arr = np.array([[3, 3, 3],
                                    [3, 3, 3],
                                    [3, 3, 3]])
@@ -47,7 +54,7 @@ class GameBoard:
         self.user_num = 0  # Make a user number for identification
         self.comp_num = 1  # Make a computer number for identification
 
-        # Flip a coin to see whether player or computer goes first
+        # Flip a coin to determine which player goes first
         coin_flip = np.random.randint(0, 2)
 
         if coin_flip == 0:
@@ -59,6 +66,7 @@ class GameBoard:
 
     """
     Converts internal numpy array into a visual ASCII board.
+    Display format from https://github.com/geoffreyyip/numpy-tictactoe/blob/master/tictactoe.py
     """
 
     def display_board(self):
@@ -74,7 +82,8 @@ class GameBoard:
             else:
                 raise Exception("Error: Unable to display board")
 
-        # inputs O's, X's, and blank spots into an ASCII tic tac toe board
+        # A board representation (ASCII)
+        # From https://github.com/geoffreyyip/numpy-tictactoe/blob/master/tictactoe.py
         print("""
          {} | {} | {}
         ---+---+---
@@ -93,10 +102,10 @@ class GameBoard:
     def return_open_slots(self):
         open_slots = []
         bool_arr = (self.board_arr == 3)
-        flat_bool_arr = bool_arr.flatten()
+        bool_arr = bool_arr.flatten()
 
-        for i in range(0, len(flat_bool_arr)):
-            if flat_bool_arr[i]:
+        for i in range(len(bool_arr)):
+            if bool_arr[i]:
                 open_slots.append(i + 1)
 
         return open_slots
@@ -115,6 +124,7 @@ class GameBoard:
         elif last_played_num == "Draw":
             print("Draw!")
 
+        # Evaluate the game and train the model
         self.evaluate()
 
     """
@@ -145,22 +155,22 @@ class GameBoard:
 
     def check_for_winner(self, last_played_num):
 
+        # Check if all slots are taken, then it is a draw
         if not self.return_open_slots():
             self.terminate("Draw")
 
-        for i in range(0, 3):
-            rows_win = (self.board_arr[i, :] == last_played_num).all()
-            cols_win = (self.board_arr[:, i] == last_played_num).all()
-
-            if rows_win or cols_win:
+        # Check rows and columns first. For loop 3 times for checking.
+        for i in range(3):
+            if (self.board_arr[i, :] == last_played_num).all() or \
+                    (self.board_arr[:, i] == last_played_num).all():
                 self.terminate(last_played_num)
 
-        diag1_win = (np.diag(self.board_arr) == last_played_num).all()
-        diag2_win = (np.diag(np.fliplr(self.board_arr)) == last_played_num).all()
-
-        if diag1_win or diag2_win:
+        # Check diagonal then. Use diag() and fliplr() method from numpy array.
+        if (np.diag(self.board_arr) == last_played_num).all() or \
+                (np.diag(np.fliplr(self.board_arr)) == last_played_num).all():
             self.terminate(last_played_num)
 
+        # If not terminated, then the game continues
         self.next_turn(last_played_num)
 
     """
@@ -188,8 +198,7 @@ class GameBoard:
         self.display_board()
         self.predict()
 
-        user_input = input("Pick an open slot: ")
-        user_input = int(user_input)
+        user_input = int(input("Pick an open slot: "))
 
         if user_input in self.return_open_slots():
             self.record_user_choice(user_input)
