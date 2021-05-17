@@ -48,6 +48,7 @@ Install the following libraries using ```pip install```
    
 4. You can play the tic tac toe game by entering the number from 1 to 9. 
    Each number represents a slot in the tic tac toe shown as the following:
+
    ![Tic Tac Toe slot number](docs/img/slotnumber.png)
    
    You are playing against a computer player.
