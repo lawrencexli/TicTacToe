@@ -38,9 +38,11 @@ Install the following libraries using ```pip install```
 2. ```cd src``` and run ```python main.py``` 
 3. A human readable game board is printed, alongside with a numpy array representation of that array.
    An example is shown here:
+
    ![Tic Tac Toe game board](docs/img/representation.png)
    
    You will also see the prediction printed like this:
+   
    ![Tic Tac Toe prediction](docs/img/prediction.png)
    
    The format of prediction represented a tic tac toe board with each slot containing a likeliness score.
@@ -48,6 +50,7 @@ Install the following libraries using ```pip install```
    
 4. You can play the tic tac toe game by entering the number from 1 to 9. 
    Each number represents a slot in the tic tac toe shown as the following:
+
    ![Tic Tac Toe slot number](docs/img/slotnumber.png)
    
    You are playing against a computer player.
